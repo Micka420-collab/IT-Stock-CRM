@@ -126,7 +126,7 @@
 
 ```bash
 # 1. Cloner le repository
-git clone <repository-url>
+git clone <https://github.com/Micka420-collab/IT-Stock-CRM.git>
 cd CRM
 
 # 2. Installer les dépendances (racine + client + server)
@@ -146,7 +146,6 @@ L'application sera accessible à :
 | Utilisateur | Mot de passe | Rôle |
 |-------------|--------------|------|
 | `admin`     | `admin123`   | Admin |
-| `Hotline6`  | `Elouan`     | Admin |
 
 > ⚠️ **Important** : Changez ces identifiants en production !
 
@@ -414,7 +413,7 @@ Les administrateurs peuvent gérer les IPs bloquées dans **Paramètres > Sécur
 
 ## 📄 Licence
 
-Ce projet est sous licence ISC.
+Ce projet est sous licence MIT.
 
 ---
 
