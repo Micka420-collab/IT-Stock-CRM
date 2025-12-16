@@ -5,7 +5,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js)
 ![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
 ![SQLite](https://img.shields.io/badge/SQLite-3-blueviolet?style=for-the-badge&logo=sqlite)
-![License](https://img.shields.io/badge/License-ISC-yellow?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 **Application de gestion d'inventaire IT complète avec gestion des prêts de PC, suivi des stocks et gamification.**
 
@@ -93,7 +93,7 @@
 ### 🎮 Gamification (Easter Egg)
 - Système XP
 - Badges déblocables
-- Thème Neon secret (code: 3150)
+- Thème Neon secret (code: ???)
 - Terminal interactif
 - Mini-jeu Snake
 
@@ -135,7 +135,7 @@
 
 ```bash
 # 1. Cloner le repository
-git clone <repository-url>
+git clone <https://github.com/Micka420-collab/IT-Stock-CRM.git>
 cd CRM
 
 # 2. Installer les dépendances (racine + client + server)
@@ -155,7 +155,6 @@ L'application sera accessible à :
 | Utilisateur | Mot de passe | Rôle |
 |-------------|--------------|------|
 | `admin`     | `admin123`   | Admin |
-| `Hotline6`  | `Elouan`     | Admin |
 
 > ⚠️ **Important** : Changez ces identifiants en production !
 
@@ -423,7 +422,7 @@ Les administrateurs peuvent gérer les IPs bloquées dans **Paramètres > Sécur
 
 ## 📄 Licence
 
-Ce projet est sous licence ISC.
+Ce projet est sous licence MIT.
 
 ---
 
