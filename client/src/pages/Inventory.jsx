@@ -59,7 +59,12 @@ export default function Inventory() {
         quantity: 0,
         min_quantity: 5,
         description: '',
-        location: ''
+        location: '',
+        serial_number: '',
+        asset_tag: '',
+        condition: 'Bon',
+        last_maintenance: '',
+        next_maintenance: ''
     });
 
     useEffect(() => {
@@ -130,7 +135,7 @@ export default function Inventory() {
                 category_name: categories.find(c => c.id == newProduct.category_id)?.name
             }]);
             setShowAddModal(false);
-            setNewProduct({ name: '', category_id: '', quantity: 0, min_quantity: 5, description: '', location: '' });
+            setNewProduct({ name: '', category_id: '', quantity: 0, min_quantity: 5, description: '', location: '', serial_number: '', asset_tag: '', condition: 'Bon', last_maintenance: '', next_maintenance: '' });
             addXp(10, 'Nouveau produit ajouté');
         } catch (error) {
             alert("Failed to add product");
@@ -266,7 +271,7 @@ export default function Inventory() {
                             >
                                 <div className="cat-info">
                                     <Box size={18} />
-                                    <span>{cat.name}</span>
+                                    <span>{t(`cat_${cat.name}`) || cat.name}</span>
                                 </div>
                                 <span className="count-badge">{getCategoryCount(cat.id)}</span>
                             </button>
@@ -310,7 +315,7 @@ export default function Inventory() {
                                             </div>
 
                                             <h3>{product.name}</h3>
-                                            <p className="category">{product.category_name}</p>
+                                            <p className="category">{t(`cat_${product.category_name}`) || product.category_name}</p>
 
                                             <div className="stock-control">
                                                 <button onClick={() => openRemoveModal(product)} disabled={product.quantity <= 0} title="Retirer du stock">
@@ -347,13 +352,13 @@ export default function Inventory() {
                 isOpen={showAddModal}
                 onClose={() => setShowAddModal(false)}
                 title={t('addItem')}
-                size="md"
+                size="lg"
             >
                 <form onSubmit={handleAddProduct} id="add-product-form" className="pro-form">
-                    <div className="form-group">
-                        <label>{t('name')} <span className="required">*</span></label>
-                        <div className="input-affix-wrapper">
-                            <Package size={16} className="input-icon-left" />
+                    {/* 3 columns layout */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                        <div className="form-group">
+                            <label>{t('name')} <span className="required">*</span></label>
                             <input
                                 required
                                 value={newProduct.name}
@@ -362,26 +367,26 @@ export default function Inventory() {
                                 autoFocus
                             />
                         </div>
-                    </div>
-
-                    <div className="form-row">
                         <div className="form-group">
                             <label>{t('category')}</label>
-                            <div className="input-affix-wrapper">
-                                <Layers size={16} className="input-icon-left" />
-                                <select
-                                    required
-                                    value={newProduct.category_id}
-                                    onChange={e => setNewProduct({ ...newProduct, category_id: e.target.value })}
-                                >
-                                    <option value="">{t('selectCategory')}</option>
-                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            </div>
+                            <select
+                                required
+                                value={newProduct.category_id}
+                                onChange={e => setNewProduct({ ...newProduct, category_id: e.target.value })}
+                            >
+                                <option value="">{t('selectCategory')}</option>
+                                {categories.map(c => <option key={c.id} value={c.id}>{t(`cat_${c.name}`) || c.name}</option>)}
+                            </select>
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>{t('location')}</label>
+                            <input
+                                value={newProduct.location}
+                                onChange={e => setNewProduct({ ...newProduct, location: e.target.value })}
+                                placeholder={t('placeholderLocation')}
+                            />
+                        </div>
 
-                    <div className="form-row">
                         <div className="form-group">
                             <label>{t('quantity')}</label>
                             <div className="number-input-group">
@@ -410,27 +415,61 @@ export default function Inventory() {
                                 <button type="button" onClick={() => setNewProduct({ ...newProduct, min_quantity: newProduct.min_quantity + 1 })}>+</button>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label>{t('location')}</label>
-                        <div className="input-affix-wrapper">
-                            <Monitor size={16} className="input-icon-left" />
+                        <div className="form-group">
+                            <label>Asset Tag (PRT/STA)</label>
                             <input
-                                value={newProduct.location}
-                                onChange={e => setNewProduct({ ...newProduct, location: e.target.value })}
-                                placeholder={t('placeholderLocation')}
+                                value={newProduct.asset_tag}
+                                onChange={e => setNewProduct({ ...newProduct, asset_tag: e.target.value })}
+                                placeholder="Ex: PRT1425"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Numéro de série</label>
+                            <input
+                                value={newProduct.serial_number}
+                                onChange={e => setNewProduct({ ...newProduct, serial_number: e.target.value })}
+                                placeholder="Ex: SN123456789"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>État</label>
+                            <select
+                                value={newProduct.condition}
+                                onChange={e => setNewProduct({ ...newProduct, condition: e.target.value })}
+                            >
+                                <option value="Neuf">✨ Neuf</option>
+                                <option value="Bon">✅ Bon</option>
+                                <option value="Usé">⚠️ Usé</option>
+                                <option value="Hors service">❌ Hors service</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Dernière maintenance</label>
+                            <input
+                                type="date"
+                                value={newProduct.last_maintenance}
+                                onChange={e => setNewProduct({ ...newProduct, last_maintenance: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Prochaine maintenance</label>
+                            <input
+                                type="date"
+                                value={newProduct.next_maintenance}
+                                onChange={e => setNewProduct({ ...newProduct, next_maintenance: e.target.value })}
                             />
                         </div>
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginTop: '1rem' }}>
                         <label>{t('description')}</label>
                         <textarea
                             value={newProduct.description}
                             onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
                             placeholder={t('placeholderDescription')}
-                            rows={3}
+                            rows={2}
                         />
                     </div>
                 </form>
@@ -522,7 +561,7 @@ export default function Inventory() {
                                         onChange={e => setEditProduct({ ...editProduct, category_id: e.target.value })}
                                     >
                                         <option value="">{t('selectCategory')}</option>
-                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        {categories.map(c => <option key={c.id} value={c.id}>{t(`cat_${c.name}`) || c.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -568,6 +607,66 @@ export default function Inventory() {
                                     onChange={e => setEditProduct({ ...editProduct, location: e.target.value })}
                                     placeholder={t('placeholderLocation')}
                                 />
+                            </div>
+                        </div>
+
+                        {/* NEW FIELDS - Identification */}
+                        <div style={{ borderTop: '1px solid var(--border-color)', margin: '1rem 0', paddingTop: '1rem' }}>
+                            <h4 style={{ fontSize: '0.85rem', color: 'var(--primary-color)', marginBottom: '0.75rem' }}>📦 Identification</h4>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Numéro de série</label>
+                                    <input
+                                        value={editProduct.serial_number || ''}
+                                        onChange={e => setEditProduct({ ...editProduct, serial_number: e.target.value })}
+                                        placeholder="Ex: SN123456789"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Asset Tag (PRT/STA)</label>
+                                    <input
+                                        value={editProduct.asset_tag || ''}
+                                        onChange={e => setEditProduct({ ...editProduct, asset_tag: e.target.value })}
+                                        placeholder="Ex: PRT1425 ou STA5678"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* NEW FIELDS - État & Maintenance */}
+                        <div style={{ borderTop: '1px solid var(--border-color)', margin: '1rem 0', paddingTop: '1rem' }}>
+                            <h4 style={{ fontSize: '0.85rem', color: 'var(--primary-color)', marginBottom: '0.75rem' }}>🔧 État & Maintenance</h4>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>État</label>
+                                    <select
+                                        value={editProduct.condition || 'Bon'}
+                                        onChange={e => setEditProduct({ ...editProduct, condition: e.target.value })}
+                                    >
+                                        <option value="Neuf">✨ Neuf</option>
+                                        <option value="Bon">✅ Bon</option>
+                                        <option value="Usé">⚠️ Usé</option>
+                                        <option value="Hors service">❌ Hors service</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Dernière maintenance</label>
+                                    <input
+                                        type="date"
+                                        value={editProduct.last_maintenance ? editProduct.last_maintenance.split('T')[0] : ''}
+                                        onChange={e => setEditProduct({ ...editProduct, last_maintenance: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Prochaine maintenance</label>
+                                    <input
+                                        type="date"
+                                        value={editProduct.next_maintenance ? editProduct.next_maintenance.split('T')[0] : ''}
+                                        onChange={e => setEditProduct({ ...editProduct, next_maintenance: e.target.value })}
+                                    />
+                                </div>
                             </div>
                         </div>
 

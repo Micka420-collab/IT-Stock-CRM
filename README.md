@@ -66,10 +66,19 @@
 - Historique complet par PRT
 - Mode "Remastering"
 
+### 📱 Gestion des téléphones
+- Inventaire complet des téléphones d'entreprise
+- Identification par TLP ID (TLP1234)
+- Numéro de série et état (Neuf/Bon/Usé/Hors service)
+- Attribution à une personne (Nom Prénom) et département
+- Import/Export CSV
+- Recherche avancée et filtres par état
+
 ### 👥 Gestion des utilisateurs
 - Rôles: Admin, Hotliner, Employé
-- **25 permissions granulaires** en 6 groupes :
+- **30 permissions granulaires** en 7 groupes :
   - 📦 **Inventaire** : voir, ajouter, éditer, supprimer, exporter
+  - 📱 **Téléphones** : voir, ajouter, éditer, supprimer, import/export
   - 👥 **Employés** : voir, ajouter, éditer, supprimer, assigner matériel
   - 💻 **Prêts PC** : voir, créer, retourner, gérer, réserver, historique
   - 🏷️ **Catégories** : voir, gérer

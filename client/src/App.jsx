@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
+import Phones from './pages/Phones';
 import History from './pages/History';
 import Settings from './pages/Settings';
 import Reports from './pages/Reports';
@@ -42,6 +43,7 @@ function App() {
                                         <Route index element={<Navigate to="/dashboard" replace />} />
                                         <Route path="dashboard" element={<Dashboard />} />
                                         <Route path="inventory" element={<Inventory />} />
+                                        <Route path="phones" element={<Phones />} />
                                         <Route path="history" element={<History />} />
                                         <Route path="reports" element={<Reports />} />
                                         <Route path="loan-pcs" element={<LoanPCs />} />

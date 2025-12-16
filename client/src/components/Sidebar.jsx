@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, History, Settings, LogOut, Database, FileText, Laptop } from 'lucide-react';
+import { LayoutDashboard, Package, History, Settings, LogOut, Database, FileText, Laptop, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useGamification } from '../context/GamificationContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -75,7 +75,12 @@ export default function Sidebar() {
         <div className="sidebar">
             <div className="sidebar-header">
                 <div className="logged-user">
-                    <span className="user-greeting">
+                    <span className="user-greeting" style={{
+                        textShadow: '0 0 15px var(--primary-color), 0 0 30px var(--primary-color)',
+                        color: 'var(--text-color)',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.5px'
+                    }}>
                         {hasCrown && <span style={{ marginRight: '5px' }}>👑</span>}
                         {user?.username}
                     </span>
@@ -101,6 +106,13 @@ export default function Sidebar() {
                     <NavLink to="/inventory" className={({ isActive }) => isActive ? 'active' : ''} id="sidebar-inventory">
                         <Package size={20} />
                         <span>{t('inventory')}</span>
+                    </NavLink>
+                )}
+
+                {can('phones_view') && (
+                    <NavLink to="/phones" className={({ isActive }) => isActive ? 'active' : ''} id="sidebar-phones">
+                        <Smartphone size={20} />
+                        <span>{t('phones')}</span>
                     </NavLink>
                 )}
 

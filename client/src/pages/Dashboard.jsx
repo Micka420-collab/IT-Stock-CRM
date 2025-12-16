@@ -5,11 +5,12 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import {
     Package, AlertTriangle, Layers, TrendingUp, TrendingDown, Clock, ArrowRight, Plus,
     Settings, LayoutGrid, List, Filter, Calendar, Save, RotateCcw, Eye, Laptop, Users, FileText,
-    PieChart, BarChart
+    PieChart, BarChart, Smartphone
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TutorialButton from '../components/TutorialButton';
 import DashboardCharts from '../components/DashboardCharts';
+import PhoneStatsCharts from '../components/PhoneStatsCharts';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +52,13 @@ export default function Dashboard() {
                 .catch(e => console.error("Stats Error", e))
                 .finally(() => setLoadingStats(false));
         }
+        if (viewMode === 'phone_stats' && !dashboardStats) {
+            setLoadingStats(true);
+            axios.get('/api/stats/phones')
+                .then(res => setDashboardStats(res.data))
+                .catch(e => console.error("Phone Stats Error", e))
+                .finally(() => setLoadingStats(false));
+        }
     }, [viewMode]);
 
     const WIDGET_TYPES = {
@@ -58,6 +66,7 @@ export default function Dashboard() {
         STAT_LOW: { id: 'stat_low', name: t('lowStockAlerts'), icon: AlertTriangle, size: 'small' },
         STAT_CATEGORIES: { id: 'stat_categories', name: t('categories'), icon: Layers, size: 'small' },
         STAT_LOAN_PCS: { id: 'stat_loan_pcs', name: t('loanPC'), icon: Laptop, size: 'small' },
+        STAT_PHONES: { id: 'stat_phones', name: t('phones') || 'Téléphonie', icon: Smartphone, size: 'small' },
         ...(team3150Unlocked ? {
             WIDGET_TEAM3150: { id: 'widget_team3150', name: 'Team 3150', icon: Users, size: 'large' },
             WIDGET_TERMINAL: { id: 'widget_terminal', name: 'Terminal', icon: Settings, size: 'large' }
@@ -73,7 +82,7 @@ export default function Dashboard() {
 
     const VIEW_PRESETS = {
         default: { name: t('defaultView'), widgets: ['stat_total', 'stat_low', 'stat_categories', 'chart_line', 'chart_bar', 'chart_pie', 'table_recent'] },
-        admin: { name: t('adminView'), widgets: ['stat_total', 'stat_low', 'stat_categories', 'stat_loan_pcs', 'chart_line', 'chart_bar', 'chart_top', 'table_recent', 'table_low_stock'] },
+        admin: { name: t('adminView'), widgets: ['stat_total', 'stat_low', 'stat_categories', 'stat_loan_pcs', 'stat_phones', 'chart_line', 'chart_bar', 'chart_top', 'table_recent', 'table_low_stock'] },
         stock: { name: t('stockView'), widgets: ['stat_total', 'stat_low', 'chart_bar', 'chart_pie', 'table_low_stock'] },
         activity: { name: t('activityView'), widgets: ['kpi_today', 'chart_line', 'chart_top', 'table_recent'] }
     };
@@ -103,7 +112,8 @@ export default function Dashboard() {
         topProducts: [],
         lowStockItems: [],
         todayActivity: 0,
-        loanPcStats: { total: 0, available: 0, loaned: 0 }
+        loanPcStats: { total: 0, available: 0, loaned: 0 },
+        phoneStats: { total: 0, available: 0, assigned: 0 }
     });
     const [categories, setCategories] = useState([]);
 
@@ -161,13 +171,14 @@ export default function Dashboard() {
 
     const fetchAllData = async () => {
         try {
-            const [prodRes, catRes, logRes, evolutionRes, topRes, loanRes] = await Promise.all([
+            const [prodRes, catRes, logRes, evolutionRes, topRes, loanRes, phonesRes] = await Promise.all([
                 axios.get('/api/products'),
                 axios.get('/api/categories'),
                 axios.get('/api/logs'),
                 axios.get('/api/stats/evolution').catch(() => ({ data: [] })),
                 axios.get('/api/stats/top-products').catch(() => ({ data: [] })),
-                axios.get('/api/loan-pcs/stats').catch(() => ({ data: { total: 0, available: 0, loaned: 0 } }))
+                axios.get('/api/loan-pcs/stats').catch(() => ({ data: { total: 0, available: 0, loaned: 0 } })),
+                axios.get('/api/phones').catch(() => ({ data: [] }))
             ]);
 
             const products = prodRes.data;
@@ -198,7 +209,12 @@ export default function Dashboard() {
                 topProducts: topRes.data,
                 lowStockItems,
                 todayActivity,
-                loanPcStats: loanRes.data
+                loanPcStats: loanRes.data,
+                phoneStats: {
+                    total: phonesRes.data.length,
+                    available: phonesRes.data.filter(p => !p.assigned_to).length,
+                    assigned: phonesRes.data.filter(p => p.assigned_to).length
+                }
             });
         } catch (error) {
             console.error("Error fetching stats", error);
@@ -323,6 +339,17 @@ export default function Dashboard() {
                         <div className="stat-info">
                             <span className="stat-value">{stats.loanPcStats.loaned}/{stats.loanPcStats.total}</span>
                             <span className="stat-label">{t('loanedPC')}</span>
+                        </div>
+                    </div>
+                );
+            case 'stat_phones':
+                return (
+                    <div className="stat-card gradient-cyan widget-stat">
+                        <div className="stat-icon"><Smartphone size={24} /></div>
+                        <div className="stat-info">
+                            {/* Display Available / Total */}
+                            <span className="stat-value">{stats.phoneStats?.available}/{stats.phoneStats?.total}</span>
+                            <span className="stat-label">{t('phones') || 'Téléphonie'}</span>
                         </div>
                     </div>
                 );
@@ -485,6 +512,27 @@ export default function Dashboard() {
                             {viewMode === 'loan_stats' ? <LayoutGrid size={14} /> : <PieChart size={14} />}
                             {viewMode === 'loan_stats' ? 'Retour Vue Classique' : 'Statistiques Prêts'}
                         </button>
+                        <button
+                            className={`view-btn btn-glow ${viewMode === 'phone_stats' ? 'active' : ''}`}
+                            style={{
+                                boxShadow: '0 0 15px rgba(6, 182, 212, 0.5)', // Cyan glow
+                                border: '1px solid rgba(6, 182, 212, 0.3)',
+                                marginLeft: '0.5rem'
+                            }}
+                            onClick={() => {
+                                if (viewMode === 'phone_stats') {
+                                    setViewMode('classic');
+                                    setDashboardStats(null);
+                                } else {
+                                    setViewMode('phone_stats');
+                                    setDashboardStats(null); // Reset to force fetch new type
+                                }
+                            }}
+                            title="Voir les statistiques détaillées de la téléphonie"
+                        >
+                            {viewMode === 'phone_stats' ? <LayoutGrid size={14} /> : <Smartphone size={14} />}
+                            {viewMode === 'phone_stats' ? 'Retour Vue Classique' : 'Stats Téléphonie'}
+                        </button>
 
                         <div className="divider-vertical" style={{ width: 1, height: 20, background: 'var(--border-color)', margin: '0 0.5rem' }}></div>
 
@@ -573,6 +621,13 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* Phone Stats View */}
+            {viewMode === 'phone_stats' && (
+                <div className="analytics-view-wrapper fade-in">
+                    <PhoneStatsCharts stats={dashboardStats} loading={loadingStats} />
+                </div>
+            )}
+
             {/* Widget Grid */}
             {viewMode === 'classic' && (
                 <div className="widget-grid">
@@ -589,7 +644,7 @@ export default function Dashboard() {
 
                     {/* Stats row */}
                     <div className="widget-row stats-row">
-                        {activeWidgets.filter(w => ['stat_total', 'stat_low', 'stat_categories', 'stat_loan_pcs', 'kpi_today'].includes(w)).map(widgetId => (
+                        {activeWidgets.filter(w => ['stat_total', 'stat_low', 'stat_categories', 'stat_loan_pcs', 'stat_phones', 'kpi_today'].includes(w)).map(widgetId => (
                             <div key={widgetId} className="widget-wrapper">
                                 {renderWidget(widgetId)}
                             </div>

@@ -8,6 +8,12 @@ export const PERMISSIONS = [
     { id: 'inventory_edit', label: 'Modifier', group: 'Inventaire', desc: 'Éditer le stock et les infos' },
     { id: 'inventory_delete', label: 'Supprimer', group: 'Inventaire', desc: 'Supprimer des produits' },
     { id: 'inventory_export', label: 'Exporter', group: 'Inventaire', desc: 'Télécharger en CSV/PDF' },
+    // Téléphones
+    { id: 'phones_view', label: 'Voir', group: 'Téléphones', desc: 'Consulter la liste des téléphones' },
+    { id: 'phones_add', label: 'Ajouter', group: 'Téléphones', desc: 'Ajouter des téléphones' },
+    { id: 'phones_edit', label: 'Modifier', group: 'Téléphones', desc: 'Modifier les informations' },
+    { id: 'phones_delete', label: 'Supprimer', group: 'Téléphones', desc: 'Supprimer des téléphones' },
+    { id: 'phones_export', label: 'Import/Export', group: 'Téléphones', desc: 'Importer et exporter CSV' },
     // Employés
     { id: 'employees_view', label: 'Voir', group: 'Employés', desc: 'Consulter la liste des employés' },
     { id: 'employees_add', label: 'Ajouter', group: 'Employés', desc: 'Créer des fiches employés' },
@@ -37,6 +43,7 @@ export const PERMISSIONS = [
 
 const GROUP_CONFIG = {
     'Inventaire': { icon: '📦', color: '#3b82f6' },
+    'Téléphones': { icon: '📱', color: '#06b6d4' },
     'Employés': { icon: '👥', color: '#10b981' },
     'Prêts': { icon: '💻', color: '#f59e0b' },
     'Catégories': { icon: '🏷️', color: '#8b5cf6' },
@@ -49,33 +56,33 @@ export const ROLE_PRESETS = [
         id: 'viewer',
         name: '👁️ Lecteur',
         description: 'Peut uniquement consulter les données sans rien modifier',
-        details: 'Voir inventaire • Voir employés • Voir prêts • Dashboard',
+        details: 'Voir inventaire • Voir téléphones • Voir prêts • Dashboard',
         color: '#3b82f6',
-        permissions: ['inventory_view', 'employees_view', 'loans_view', 'categories_view', 'notes_view', 'dashboard_view']
+        permissions: ['inventory_view', 'phones_view', 'employees_view', 'loans_view', 'categories_view', 'notes_view', 'dashboard_view']
     },
     {
         id: 'hotliner',
         name: '🎧 Hotliner',
-        description: 'Support utilisateur : gère les prêts PC et aide les employés',
-        details: 'Prêter/Retourner PC • Réserver • Créer notes • Exporter',
+        description: 'Support utilisateur : gère les prêts PC et téléphones',
+        details: 'Prêter/Retourner PC • Gérer téléphones • Réserver • Notes',
         color: '#10b981',
-        permissions: ['inventory_view', 'inventory_export', 'employees_view', 'employees_assign', 'loans_view', 'loans_create', 'loans_return', 'loans_reserve', 'loans_history', 'categories_view', 'notes_view', 'notes_create', 'dashboard_view']
+        permissions: ['inventory_view', 'inventory_export', 'phones_view', 'phones_add', 'phones_edit', 'employees_view', 'employees_assign', 'loans_view', 'loans_create', 'loans_return', 'loans_reserve', 'loans_history', 'categories_view', 'notes_view', 'notes_create', 'dashboard_view']
     },
     {
         id: 'technician',
         name: '🔧 Technicien',
-        description: 'Gère le matériel : ajoute des produits, gère les prêts',
-        details: 'Tout Hotliner + Ajouter/Modifier stock • Gérer catégories',
+        description: 'Gère le matériel : ajoute des produits, gère les prêts et téléphones',
+        details: 'Tout Hotliner + Ajouter/Modifier stock • Import/Export téléphones',
         color: '#f59e0b',
-        permissions: ['inventory_view', 'inventory_add', 'inventory_edit', 'inventory_export', 'employees_view', 'employees_assign', 'loans_view', 'loans_create', 'loans_return', 'loans_manage', 'loans_reserve', 'loans_history', 'categories_view', 'categories_manage', 'notes_view', 'notes_create', 'notes_delete', 'dashboard_view']
+        permissions: ['inventory_view', 'inventory_add', 'inventory_edit', 'inventory_export', 'phones_view', 'phones_add', 'phones_edit', 'phones_export', 'employees_view', 'employees_assign', 'loans_view', 'loans_create', 'loans_return', 'loans_manage', 'loans_reserve', 'loans_history', 'categories_view', 'categories_manage', 'notes_view', 'notes_create', 'notes_delete', 'dashboard_view']
     },
     {
         id: 'stock_manager',
         name: '📦 Gestionnaire',
-        description: 'Contrôle total sur l\'inventaire et les employés',
-        details: 'Tout Technicien + Supprimer stock • Ajouter employés • Paramètres',
+        description: 'Contrôle total sur l\'inventaire, téléphones et employés',
+        details: 'Tout Technicien + Supprimer stock/téléphones • Ajouter employés',
         color: '#8b5cf6',
-        permissions: ['inventory_view', 'inventory_add', 'inventory_edit', 'inventory_delete', 'inventory_export', 'employees_view', 'employees_add', 'employees_edit', 'employees_assign', 'loans_view', 'loans_history', 'categories_view', 'categories_manage', 'notes_view', 'notes_create', 'settings_access', 'dashboard_view']
+        permissions: ['inventory_view', 'inventory_add', 'inventory_edit', 'inventory_delete', 'inventory_export', 'phones_view', 'phones_add', 'phones_edit', 'phones_delete', 'phones_export', 'employees_view', 'employees_add', 'employees_edit', 'employees_assign', 'loans_view', 'loans_history', 'categories_view', 'categories_manage', 'notes_view', 'notes_create', 'settings_access', 'dashboard_view']
     },
     {
         id: 'team_lead',
@@ -83,7 +90,7 @@ export const ROLE_PRESETS = [
         description: 'Supervise l\'équipe : voit les audits, gère tout sauf sécurité',
         details: 'Tout Gestionnaire + Supprimer employés • Logs d\'audit',
         color: '#ec4899',
-        permissions: ['inventory_view', 'inventory_add', 'inventory_edit', 'inventory_export', 'employees_view', 'employees_add', 'employees_edit', 'employees_delete', 'employees_assign', 'loans_view', 'loans_create', 'loans_return', 'loans_manage', 'loans_reserve', 'loans_history', 'categories_view', 'categories_manage', 'notes_view', 'notes_create', 'notes_delete', 'settings_access', 'audit_view', 'dashboard_view']
+        permissions: ['inventory_view', 'inventory_add', 'inventory_edit', 'inventory_export', 'phones_view', 'phones_add', 'phones_edit', 'phones_delete', 'phones_export', 'employees_view', 'employees_add', 'employees_edit', 'employees_delete', 'employees_assign', 'loans_view', 'loans_create', 'loans_return', 'loans_manage', 'loans_reserve', 'loans_history', 'categories_view', 'categories_manage', 'notes_view', 'notes_create', 'notes_delete', 'settings_access', 'audit_view', 'dashboard_view']
     },
     {
         id: 'full_access',

@@ -600,6 +600,20 @@ export default function Settings() {
                                             </span>
                                         )}
                                     </button>
+
+                                    {/* BRGM Corporate Theme */}
+                                    <button
+                                        className={`theme-option ${theme === 'brgm' ? 'selected' : ''}`}
+                                        onClick={() => setTheme('brgm')}
+                                    >
+                                        <div className="theme-preview brgm" style={{
+                                            background: 'linear-gradient(135deg, #3d3d3d 0%, #4a4a4a 50%, #e85d04 100%)',
+                                            position: 'relative'
+                                        }}></div>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            🏛️ BRGM
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
 

@@ -55,14 +55,14 @@ app.use(cors({
 }));
 
 // ==================== SECURITY: Rate Limiting ====================
-// General API rate limiter (excludes login endpoint)
+// General API rate limiter - DISABLED FOR DEVELOPMENT (skip all)
 const generalLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 500, // 500 requests per 15 min (increased for dev)
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 0, // 0 = disabled (unlimited)
   message: { error: 'Trop de requêtes, veuillez réessayer plus tard.' },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path === '/api/health' || req.path === '/api/login' // Skip login (has its own limiter)
+  skip: () => true // SKIP ALL REQUESTS - rate limiting disabled for team development
 });
 
 // Strict login rate limiter with remaining attempts info
@@ -694,16 +694,16 @@ app.get('/api/products', authenticateToken, async (req, res) => {
 
 // Add Product
 app.post('/api/products', authenticateToken, async (req, res) => {
-  const { name, category_id, quantity, min_quantity, description, location } = req.body;
+  const { name, category_id, quantity, min_quantity, description, location, serial_number, asset_tag, condition, last_maintenance, next_maintenance } = req.body;
   const db = require('./database').getDb();
   try {
     const result = await db.run(
-      `INSERT INTO products (name, category_id, quantity, min_quantity, description, location) VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, category_id, quantity, min_quantity, description, location]
+      `INSERT INTO products (name, category_id, quantity, min_quantity, description, location, serial_number, asset_tag, condition, last_maintenance, next_maintenance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, category_id, quantity, min_quantity, description, location, serial_number || null, asset_tag || null, condition || 'Bon', last_maintenance || null, next_maintenance || null]
     );
     // Log with quantity info
     await db.run("INSERT INTO logs (user_id, action, details, quantity_change) VALUES (?, ?, ?, ?)",
-      [req.user.id, 'ADD_PRODUCT', `Added "${name}" (qty: ${quantity})`, quantity]);
+      [req.user.id, 'ADD_PRODUCT', `Added "${name}" (qty: ${quantity})${asset_tag ? ` [${asset_tag}]` : ''}`, quantity]);
     res.json({ id: result.lastID, ...req.body });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -831,19 +831,19 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
 // Update Product
 app.put('/api/products/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { name, category_id, quantity, min_quantity, description, location } = req.body;
+  const { name, category_id, quantity, min_quantity, description, location, serial_number, asset_tag, condition, last_maintenance, next_maintenance } = req.body;
   const db = require('./database').getDb();
   try {
     const product = await db.get("SELECT * FROM products WHERE id = ?", [id]);
     if (!product) return res.status(404).json({ error: "Product not found" });
 
     await db.run(
-      `UPDATE products SET name = ?, category_id = ?, quantity = ?, min_quantity = ?, description = ?, location = ?, last_updated = CURRENT_TIMESTAMP WHERE id = ?`,
-      [name, category_id, quantity, min_quantity, description || '', location || '', id]
+      `UPDATE products SET name = ?, category_id = ?, quantity = ?, min_quantity = ?, description = ?, location = ?, serial_number = ?, asset_tag = ?, condition = ?, last_maintenance = ?, next_maintenance = ?, last_updated = CURRENT_TIMESTAMP WHERE id = ?`,
+      [name, category_id, quantity, min_quantity, description || '', location || '', serial_number || null, asset_tag || null, condition || 'Bon', last_maintenance || null, next_maintenance || null, id]
     );
 
     await db.run("INSERT INTO logs (user_id, action, details) VALUES (?, ?, ?)",
-      [req.user.id, 'UPDATE_PRODUCT', `Updated "${name}"`]);
+      [req.user.id, 'UPDATE_PRODUCT', `Updated "${name}"${asset_tag ? ` [${asset_tag}]` : ''}`]);
 
     res.json({ success: true });
   } catch (error) {
@@ -892,6 +892,113 @@ app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
   }
 });
 
+
+// ==================== PHONES INVENTORY ====================
+
+// Get all phones
+app.get('/api/phones', authenticateToken, requirePermission('phones_view'), async (req, res) => {
+  const db = require('./database').getDb();
+  try {
+    const phones = await db.all("SELECT * FROM phones ORDER BY last_updated DESC");
+    res.json(phones);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add phone
+app.post('/api/phones', authenticateToken, requirePermission('phones_add'), async (req, res) => {
+  const { name, serial_number, tlp_id, assigned_to, department, condition, notes } = req.body;
+  const db = require('./database').getDb();
+  try {
+    const result = await db.run(
+      `INSERT INTO phones (name, serial_number, tlp_id, assigned_to, department, condition, notes) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [name, serial_number || null, tlp_id || null, assigned_to || null, department || null, condition || 'Bon', notes || null]
+    );
+    await db.run("INSERT INTO logs (user_id, action, details) VALUES (?, ?, ?)",
+      [req.user.id, 'ADD_PHONE', `Added phone "${name}"${tlp_id ? ` [${tlp_id}]` : ''}`]);
+    res.json({ id: result.lastID, ...req.body });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update phone
+app.put('/api/phones/:id', authenticateToken, requirePermission('phones_edit'), async (req, res) => {
+  const { id } = req.params;
+  const { name, serial_number, tlp_id, assigned_to, department, condition, notes } = req.body;
+  const db = require('./database').getDb();
+  try {
+    const phone = await db.get("SELECT * FROM phones WHERE id = ?", [id]);
+    if (!phone) return res.status(404).json({ error: "Phone not found" });
+
+    await db.run(
+      `UPDATE phones SET name = ?, serial_number = ?, tlp_id = ?, assigned_to = ?, department = ?, condition = ?, notes = ?, last_updated = CURRENT_TIMESTAMP WHERE id = ?`,
+      [name, serial_number || null, tlp_id || null, assigned_to || null, department || null, condition || 'Bon', notes || null, id]
+    );
+    await db.run("INSERT INTO logs (user_id, action, details) VALUES (?, ?, ?)",
+      [req.user.id, 'UPDATE_PHONE', `Updated phone "${name}"${tlp_id ? ` [${tlp_id}]` : ''}`]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete phone
+app.delete('/api/phones/:id', authenticateToken, requirePermission('phones_delete'), async (req, res) => {
+  const { id } = req.params;
+  const db = require('./database').getDb();
+  try {
+    const phone = await db.get("SELECT * FROM phones WHERE id = ?", [id]);
+    if (!phone) return res.status(404).json({ error: "Phone not found" });
+
+    await db.run("DELETE FROM phones WHERE id = ?", [id]);
+    await db.run("INSERT INTO logs (user_id, action, details) VALUES (?, ?, ?)",
+      [req.user.id, 'DELETE_PHONE', `Deleted phone "${phone.name}"${phone.tlp_id ? ` [${phone.tlp_id}]` : ''}`]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Import phones from CSV
+app.post('/api/phones/import', authenticateToken, requirePermission('phones_export'), async (req, res) => {
+  const { data } = req.body;
+  const db = require('./database').getDb();
+
+  if (!data || !Array.isArray(data)) {
+    return res.status(400).json({ error: "Invalid data format" });
+  }
+
+  try {
+    let imported = 0;
+    for (const row of data) {
+      if (row.name?.trim()) {
+        await db.run(
+          "INSERT INTO phones (name, serial_number, tlp_id, assigned_to, department, condition, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [row.name.trim(), row.serial_number?.trim() || '', row.tlp_id?.trim() || '', row.assigned_to?.trim() || '', row.department?.trim() || '', row.condition?.trim() || 'Bon', row.notes?.trim() || '']
+        );
+        imported++;
+      }
+    }
+    await db.run("INSERT INTO logs (user_id, action, details) VALUES (?, ?, ?)",
+      [req.user.id, 'IMPORT_PHONES', `Imported ${imported} phones`]);
+    res.json({ success: true, imported });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Export phones
+app.get('/api/phones/export', authenticateToken, requirePermission('phones_export'), async (req, res) => {
+  const db = require('./database').getDb();
+  try {
+    const phones = await db.all("SELECT name, serial_number, tlp_id, assigned_to, department, condition, notes FROM phones");
+    res.json(phones);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ==================== EMPLOYEES ====================
 
@@ -1881,6 +1988,77 @@ app.post('/api/admin/reset-employees', authenticateToken, verifyAdmin, async (re
 });
 
 // ==================== DASHBOARD STATS ====================
+
+// Get Phone Statistics (Charts)
+app.get('/api/stats/phones', authenticateToken, async (req, res) => {
+  const db = require('./database').getDb();
+  try {
+    const stats = {};
+
+    // 1. Status Distribution
+    const distribution = await db.all("SELECT assigned_to, condition, COUNT(*) as count FROM phones GROUP BY assigned_to, condition");
+    stats.distribution = {
+      available: 0,
+      assigned: 0,
+      out_of_service: 0,
+      total: 0
+    };
+    stats.conditions = {}; // Breakdown by condition
+
+    distribution.forEach(row => {
+      // Condition breakdown
+      stats.conditions[row.condition] = (stats.conditions[row.condition] || 0) + row.count;
+
+      // Status breakdown
+      if (row.condition === 'Hors service') {
+        stats.distribution.out_of_service += row.count;
+      } else if (row.assigned_to) {
+        stats.distribution.assigned += row.count;
+      } else {
+        stats.distribution.available += row.count;
+      }
+      stats.distribution.total += row.count;
+    });
+
+    // 2. Phone Activity (Last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const dateStr = sevenDaysAgo.toISOString();
+
+    const activity = await db.all(`
+      SELECT date(timestamp) as date, COUNT(*) as count 
+      FROM logs 
+      WHERE action IN ('ADD_PHONE', 'UPDATE_PHONE', 'DELETE_PHONE') AND timestamp > ? 
+      GROUP BY date(timestamp)
+      ORDER BY date(timestamp)
+    `, [dateStr]);
+
+    // Fill in missing days
+    stats.activity = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().split('T')[0];
+      const found = activity.find(a => a.date === dateKey);
+      stats.activity.push({ date: dateKey, count: found ? found.count : 0 });
+    }
+    stats.activity.reverse();
+
+    // 3. Top Departments (if available)
+    stats.departments = await db.all(`
+      SELECT department, COUNT(*) as count 
+      FROM phones 
+      WHERE department IS NOT NULL AND department != '' 
+      GROUP BY department 
+      ORDER BY count DESC 
+      LIMIT 5
+    `);
+
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get Dashboard Statistics (Charts)
 app.get('/api/stats/dashboard', authenticateToken, async (req, res) => {

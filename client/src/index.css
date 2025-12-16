@@ -117,6 +117,42 @@
   /* Red glow */
 }
 
+[data-theme='brgm'] {
+  /* BRGM Corporate Theme - From brgm.fr website */
+  /* Main colors: Grey sidebar, Orange accents, White/Light grey backgrounds */
+  --bg-color: #f4f4f4;
+  /* Light grey background like BRGM site */
+  --card-bg: #ffffff;
+  /* White cards */
+  --text-color: #2d2d2d;
+  /* Dark grey text */
+  --text-secondary: #6b6b6b;
+  /* Medium grey */
+  --primary-color: #e85d04;
+  /* BRGM Orange - Main accent */
+  --secondary-color: #4a4a4a;
+  /* Dark grey secondary */
+  --accent-color: #e85d04;
+  /* Orange accent */
+  --border-color: #e0e0e0;
+  /* Light grey border */
+  --hover-bg: #fff5f0;
+  /* Light orange hover */
+  --input-bg: #ffffff;
+  --input-border: #cccccc;
+  --sidebar-bg: #3d3d3d;
+  /* Dark grey sidebar like BRGM */
+  --sidebar-border: #e85d04;
+  /* Orange accent border */
+  --shadow-color: #00000015;
+  --success-color: #28a745;
+  /* Green for success */
+  --warning-color: #e85d04;
+  /* Orange warning */
+  --danger-color: #dc3545;
+  /* Red danger */
+  --font-family: 'Segoe UI', 'Roboto', sans-serif;
+}
 
 body {
   margin: 0;
@@ -503,6 +539,10 @@ body:has(.dashboard-layout) {
 
 .stat-card.gradient-green {
   background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+}
+
+.stat-card.gradient-cyan {
+  background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
 }
 
 .stat-icon {

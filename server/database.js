@@ -143,6 +143,19 @@ async function initializeDatabase() {
       unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
+
+    CREATE TABLE IF NOT EXISTS phones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      serial_number TEXT,
+      tlp_id TEXT,
+      assigned_to TEXT,
+      department TEXT,
+      condition TEXT DEFAULT 'Bon',
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Migration: Ensure gamification columns exist in users table
@@ -176,7 +189,7 @@ async function initializeDatabase() {
   }
 
   // Seed categories
-  const categories = ['PC', 'Laptop', 'Screen', 'Keyboard', 'Mouse', 'Battery', 'Charger', 'Adapter', 'Cleaning', 'Cables', 'Projector', 'Privacy Filter'];
+  const categories = ['PC', 'Laptop', 'Screen', 'Keyboard', 'Mouse', 'Battery', 'Charger', 'Adapter', 'Cleaning', 'Cables', 'Projector', 'Privacy Filter', 'Station d\'accueil'];
   for (const cat of categories) {
     await db.run("INSERT OR IGNORE INTO categories (name) VALUES (?)", [cat]);
   }
@@ -347,6 +360,37 @@ async function initializeDatabase() {
   try {
     await db.run("ALTER TABLE user_badges ADD COLUMN user_role TEXT DEFAULT 'user'");
     console.log('Migration: Added user_role column to user_badges table');
+  } catch (e) { /* exists */ }
+
+  // ==================== NEW INVENTORY FIELDS ====================
+  // Migration: Add serial_number to products
+  try {
+    await db.run("ALTER TABLE products ADD COLUMN serial_number TEXT");
+    console.log('Migration: Added serial_number column to products table');
+  } catch (e) { /* exists */ }
+
+  // Migration: Add asset_tag to products (PRT1234, STA5678)
+  try {
+    await db.run("ALTER TABLE products ADD COLUMN asset_tag TEXT");
+    console.log('Migration: Added asset_tag column to products table');
+  } catch (e) { /* exists */ }
+
+  // Migration: Add condition to products (Neuf, Bon, Usé, Hors service)
+  try {
+    await db.run("ALTER TABLE products ADD COLUMN condition TEXT DEFAULT 'Bon'");
+    console.log('Migration: Added condition column to products table');
+  } catch (e) { /* exists */ }
+
+  // Migration: Add last_maintenance to products
+  try {
+    await db.run("ALTER TABLE products ADD COLUMN last_maintenance DATETIME");
+    console.log('Migration: Added last_maintenance column to products table');
+  } catch (e) { /* exists */ }
+
+  // Migration: Add next_maintenance to products
+  try {
+    await db.run("ALTER TABLE products ADD COLUMN next_maintenance DATETIME");
+    console.log('Migration: Added next_maintenance column to products table');
   } catch (e) { /* exists */ }
 
   return db;
