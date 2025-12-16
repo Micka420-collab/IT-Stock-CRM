@@ -5,7 +5,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js)
 ![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
 ![SQLite](https://img.shields.io/badge/SQLite-3-blueviolet?style=for-the-badge&logo=sqlite)
-![License](https://img.shields.io/badge/License-IMT-yellow?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 **Application de gestion d'inventaire IT complète avec gestion des prêts de PC, suivi des stocks et gamification.**
 
