@@ -84,7 +84,7 @@
 ### 🎮 Gamification (Easter Egg)
 - Système XP
 - Badges déblocables
-- Thème Neon secret (code: 3150)
+- Thème Neon secret (code: ???)
 - Terminal interactif
 - Mini-jeu Snake
 
